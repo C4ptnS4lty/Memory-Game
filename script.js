@@ -1,10 +1,18 @@
 const start = document.getElementById("start");
+const restart = document.getElementById("restart");
+const displayrRecord = document.getElementById("record");
+const displayTime = document.getElementById("time");
 const gameContainer = document.getElementById("game");
 
 
 let card1;
 let card2;
-let play = true;
+let time = 0;
+let timesUp;
+let done;
+let record = JSON.parse(localStorage.getItem('record')) || 'No record';
+displayrRecord.innerText = `Fastest Time: ${record} seconds`;
+let play = false;
 
 
 const COLORS = [
@@ -20,7 +28,7 @@ const COLORS = [
   "purple"
 ];
 
-let done = COLORS.length;
+
 
 // here is a helper function to shuffle an array
 // it returns the same array with values shuffled
@@ -45,7 +53,7 @@ function shuffle(array) {
   return array;
 }
 
-let shuffledColors = shuffle(COLORS);
+let shuffledColors;
 
 // this function loops over the array of colors
 // it creates a new div and gives it a class with the value of the color
@@ -71,8 +79,6 @@ function handleCardClick(event) {
   // you can use event.target to see which element was clicked
   console.log("you just clicked", event.target);
 if (play) {
-  
-  
   if (card1 != null) {
     card2 = event.target;
     event.target.style.backgroundColor = card2.getAttribute('class');
@@ -86,24 +92,33 @@ if (play) {
       if(card1.getAttribute('class') == card2.getAttribute('class')) {
         //cards are confirmed to match and so no eventlisteners will be reinitialized.
         console.log(card1.getAttribute('class') + ' matches ' + card2.getAttribute('class'));
-        
+        done -= 2;
       } else {
         console.log(card1.getAttribute('class') + ' does not match ' + card2.getAttribute('class'));
         //reset cards to default appearance and hide faces.
         card1.style.backgroundColor = 'white';
         card2.style.backgroundColor = 'white';
-
         //reinitialize event listeners as cards have been confirmed to not match.
         card1.addEventListener("click", handleCardClick);
         card2.addEventListener("click", handleCardClick);
-
       }
       //Remove tracking cards for storage of a new pair.
       card1 = null;
       card2 = null;
-
-      //resumes play.
-      play = true;
+      //resumes play if all cards have not been flipped over.
+      if (done != 0){
+        play = true;
+      } else {
+        //Implement for score storage.
+        clearInterval(timesUp);
+        if (time < record) {
+          record = time;
+          displayrRecord.innerText = `Fastest Time: ${record} seconds`;
+          localStorage.setItem('record', JSON.stringify(record));
+        }
+        
+        time = 0;
+      }
     }, 1000);
 
   } else {
@@ -120,5 +135,36 @@ if (play) {
 }
 }
 
+function timeKeeper () {
+  timesUp = setInterval(function() {
+    time++;
+    displayTime.innerText = `Current Time: ${time} seconds`;
+  },1000)
+}
+
 // when the DOM loads
-start.addEventListener('click', createDivsForColors(shuffledColors));
+start.addEventListener('click', function(){
+  if(!play) {
+    gameContainer.innerHTML = "";
+    play = true;
+    done = COLORS.length;
+    shuffledColors = shuffle(COLORS);
+    createDivsForColors(shuffledColors);
+    timeKeeper();
+  }
+}
+);
+
+restart.addEventListener('click', function(){
+  gameContainer.innerHTML = "";
+  play = true;
+  time = 0;
+  displayTime.innerText = `Current Time: ${time} seconds`;
+  done = COLORS.length;
+  clearInterval(timesUp);
+
+  shuffledColors = shuffle(COLORS);
+  createDivsForColors(shuffledColors);
+  timeKeeper();
+}
+);
