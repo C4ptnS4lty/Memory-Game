@@ -1,4 +1,11 @@
+const start = document.getElementById("start");
 const gameContainer = document.getElementById("game");
+
+
+let card1;
+let card2;
+let play = true;
+
 
 const COLORS = [
   "red",
@@ -12,6 +19,8 @@ const COLORS = [
   "orange",
   "purple"
 ];
+
+let done = COLORS.length;
 
 // here is a helper function to shuffle an array
 // it returns the same array with values shuffled
@@ -61,7 +70,55 @@ function createDivsForColors(colorArray) {
 function handleCardClick(event) {
   // you can use event.target to see which element was clicked
   console.log("you just clicked", event.target);
+if (play) {
+  
+  
+  if (card1 != null) {
+    card2 = event.target;
+    event.target.style.backgroundColor = card2.getAttribute('class');
+    card2.removeEventListener("click", handleCardClick);
+
+    //Stops handler from executing code on click until timeout and cards are processed.
+    //This is to prevent more than 2 cards being flipped before checking.
+    play = false;
+
+    setTimeout(function() {
+      if(card1.getAttribute('class') == card2.getAttribute('class')) {
+        //cards are confirmed to match and so no eventlisteners will be reinitialized.
+        console.log(card1.getAttribute('class') + ' matches ' + card2.getAttribute('class'));
+        
+      } else {
+        console.log(card1.getAttribute('class') + ' does not match ' + card2.getAttribute('class'));
+        //reset cards to default appearance and hide faces.
+        card1.style.backgroundColor = 'white';
+        card2.style.backgroundColor = 'white';
+
+        //reinitialize event listeners as cards have been confirmed to not match.
+        card1.addEventListener("click", handleCardClick);
+        card2.addEventListener("click", handleCardClick);
+
+      }
+      //Remove tracking cards for storage of a new pair.
+      card1 = null;
+      card2 = null;
+
+      //resumes play.
+      play = true;
+    }, 1000);
+
+  } else {
+    
+    card1 = event.target;
+    event.target.style.backgroundColor = card1.getAttribute('class');
+
+    //Removes listener event so card cannot be clicked twice for false positive.
+    card1.removeEventListener("click", handleCardClick);
+
+    console.log(`Card: ` + card1.getAttribute('class'));
+
+  }
+}
 }
 
 // when the DOM loads
-createDivsForColors(shuffledColors);
+start.addEventListener('click', createDivsForColors(shuffledColors));
